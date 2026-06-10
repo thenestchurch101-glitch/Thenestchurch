@@ -1,0 +1,290 @@
+.page {
+  background: #f5f3ef;
+  min-height: 100vh;
+  padding: 112px 24px 48px;
+}
+
+.stack {
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 1180px;
+}
+
+.hero {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+}
+
+.heroIcon {
+  align-items: center;
+  background: rgba(182, 31, 47, 0.08);
+  border-radius: 999px;
+  color: #b61f2f;
+  display: inline-flex;
+  height: 80px;
+  justify-content: center;
+  width: 80px;
+}
+
+.heroTitle {
+  color: #111111;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.heroText {
+  color: #5b544c;
+  font-size: 1.05rem;
+  margin: 0;
+  max-width: 48rem;
+}
+
+.datePill,
+.banner {
+  border-radius: 999px;
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  padding: 12px 18px;
+}
+
+.datePill {
+  background: #b61f2f;
+  color: #fff8f2;
+}
+
+.banner {
+  width: fit-content;
+}
+
+.bannerSuccess {
+  background: rgba(36, 148, 84, 0.14);
+  color: #1e7f4d;
+}
+
+.bannerWarn {
+  background: rgba(182, 31, 47, 0.12);
+  color: #8f1422;
+}
+
+.panel {
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(17, 17, 17, 0.08);
+  overflow: hidden;
+}
+
+.panelPad {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.primaryButton,
+.secondaryButton {
+  align-items: center;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  text-decoration: none;
+}
+
+.primaryButton {
+  background: #b61f2f;
+  color: #fff8f2;
+}
+
+.secondaryButton {
+  background: #111111;
+  color: #fff8f2;
+}
+
+.searchWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.searchInput,
+.input,
+.select,
+.textarea {
+  background: #ffffff;
+  border: 2px solid #e6e0d7;
+  border-radius: 999px;
+  color: #111111;
+  font: inherit;
+  min-height: 46px;
+  padding: 0 16px;
+  width: 100%;
+}
+
+.textarea {
+  border-radius: 18px;
+  min-height: 180px;
+  padding: 14px 16px;
+  resize: vertical;
+}
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+.memberGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.memberCard {
+  background: #f8f7f4;
+  border: 2px solid #ece7df;
+  border-radius: 22px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.memberTop {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.memberIdentity {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.avatar {
+  align-items: center;
+  background: rgba(182, 31, 47, 0.1);
+  border-radius: 999px;
+  color: #b61f2f;
+  display: inline-flex;
+  flex: 0 0 48px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+}
+
+.memberName {
+  color: #111111;
+  display: block;
+  font-weight: 800;
+}
+
+.memberMeta {
+  color: #6b6258;
+  display: block;
+  font-size: 0.92rem;
+  margin-top: 4px;
+}
+
+.checkbox {
+  height: 24px;
+  width: 24px;
+}
+
+.triple {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fieldLabel {
+  color: #8f1422;
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.tinyInput {
+  background: #ffffff;
+  border: 2px solid #e6e0d7;
+  border-radius: 14px;
+  min-height: 42px;
+  padding: 0 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.statusPill {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.statusPresent {
+  background: rgba(36, 148, 84, 0.14);
+  color: #1e7f4d;
+}
+
+.statusMissing {
+  background: rgba(17, 17, 17, 0.08);
+  color: #57514a;
+}
+
+.empty {
+  color: #5b544c;
+  padding: 32px 18px;
+  text-align: center;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.twoCol {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .triple,
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+
+  .memberTop {
+    align-items: start;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "thenestchurch-next",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.1",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "import:django": "node ./scripts/import-django-sqlite.mjs",
+    "import:django:attendance": "node ./scripts/import-django-sqlite.mjs attendance",
+    "seed:admin": "node ./scripts/seed-admin.mjs",
+    "seed:absentee-viewer": "node ./scripts/seed-absentee-viewer.mjs",
+    "seed:department-leads": "node ./scripts/seed-department-leads.mjs",
+    "verify:django-import": "node ./scripts/verify-django-import.mjs",
+    "birthday:send": "node ./scripts/send-birthday-emails.mjs",
+    "payload": "payload",
+    "payload:generate:importmap": "payload generate:importmap",
+    "payload:generate:types": "payload generate:types"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "^3.84.1",
+    "@payloadcms/next": "^3.84.1",
+    "@payloadcms/richtext-lexical": "^3.84.1",
+    "graphql": "^16.13.2",
+    "next": "16.2.4",
+    "payload": "^3.84.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "typescript": "^5.8.3"
+  }
+}
