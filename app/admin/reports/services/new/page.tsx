@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HoneypotField } from "@/components/honeypot-field";
 import { createService } from "../../actions";
 import styles from "../../reports.module.css";
 
@@ -42,6 +43,7 @@ export default async function CreateServicePage({
           <div className={styles.panelPad}>
             <h2 className={styles.panelTitle}>New Service</h2>
             <form action={createService} className={styles.form}>
+              <HoneypotField />
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="name">
                   Service Name

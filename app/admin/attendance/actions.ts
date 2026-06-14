@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Member } from "@/payload-types";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
+import { isHoneypotTriggered } from "@/payload/utilities/honeypot";
 
 const buildRedirectURL = ({
   date,
@@ -48,6 +49,14 @@ const buildRedirectURL = ({
 };
 
 export const saveAttendanceRecords = async (formData: FormData) => {
+  if (isHoneypotTriggered(formData)) {
+    redirect(
+      buildRedirectURL({
+        saved: "invalid",
+      }),
+    );
+  }
+
   const { req } = await getAdminContext("attendance-register-save", {
     allowedRoles: ["admin", "staff"],
   });
@@ -130,6 +139,14 @@ export const saveAttendanceRecords = async (formData: FormData) => {
 };
 
 export const quickMarkAttendance = async (formData: FormData) => {
+  if (isHoneypotTriggered(formData)) {
+    redirect(
+      buildRedirectURL({
+        saved: "invalid",
+      }),
+    );
+  }
+
   const { req } = await getAdminContext("attendance-register-quick-mark", {
     allowedRoles: ["admin", "staff"],
   });

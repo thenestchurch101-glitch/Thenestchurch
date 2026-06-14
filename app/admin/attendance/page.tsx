@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HoneypotField } from "@/components/honeypot-field";
 import type { Where } from "payload";
 import { AdminPagination } from "@/components/admin-pagination";
 import type { AttendanceRecord, Department, Member, Service } from "@/payload-types";
@@ -413,6 +414,9 @@ export default async function AttendanceRegisterPage({
                     <Link className={styles.secondaryButton} href="/admin/attendance/absentees">
                       Track Absentees
                     </Link>
+                    <Link className={styles.secondaryButton} href="/admin/attendance/phone-export">
+                      Export Phones
+                    </Link>
                     <Link className={styles.secondaryButton} href="/admin/collections/services/create">
                       New Service
                     </Link>
@@ -501,6 +505,7 @@ export default async function AttendanceRegisterPage({
                 <div className={styles.emptyState}>No members matched the current search.</div>
               ) : (
                 <form action={saveAttendanceRecords} className={styles.batchForm}>
+                  <HoneypotField />
                   <input name="date" type="hidden" value={activeDate} />
                   <input name="department" type="hidden" value={requestedDepartment ?? ""} />
                   <input name="query" type="hidden" value={query} />
@@ -532,6 +537,12 @@ export default async function AttendanceRegisterPage({
                       href={`/admin/collections/attendance-records?where[date][equals]=${encodeURIComponent(activeDate)}`}
                     >
                       Open Raw Records
+                    </Link>
+                    <Link
+                      className={styles.ghostButton}
+                      href={`/admin/attendance/phone-export?date=${encodeURIComponent(activeDate)}${selectedService ? `&service=${selectedService.id}` : ""}${requestedDepartment ? `&department=${encodeURIComponent(requestedDepartment)}` : ""}${query ? `&query=${encodeURIComponent(query)}` : ""}`}
+                    >
+                      Open Phone Export
                     </Link>
                   </div>
 

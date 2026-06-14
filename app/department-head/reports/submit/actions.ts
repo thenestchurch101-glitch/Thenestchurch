@@ -2,11 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { getDepartmentHeadContext } from "@/payload/utilities/getDepartmentHeadContext";
+import { isHoneypotTriggered } from "@/payload/utilities/honeypot";
 
 const takeString = (value: FormDataEntryValue | null) =>
   typeof value === "string" ? value : "";
 
 export async function submitDepartmentHeadReport(formData: FormData) {
+  if (isHoneypotTriggered(formData)) {
+    redirect("/department-head/reports/submit?saved=invalid");
+  }
+
   const serviceID = Number(takeString(formData.get("service")));
   const title = takeString(formData.get("title")).trim();
   const reportContent = takeString(formData.get("reportContent")).trim();

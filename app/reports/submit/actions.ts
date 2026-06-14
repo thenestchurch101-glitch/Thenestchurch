@@ -3,10 +3,15 @@
 import configPromise from "@payload-config";
 import { redirect } from "next/navigation";
 import { getPayload } from "payload";
+import { isHoneypotTriggered } from "@/payload/utilities/honeypot";
 
 const takeString = (value: FormDataEntryValue | null) => (typeof value === "string" ? value.trim() : "");
 
 export async function submitPublicServiceReport(formData: FormData) {
+  if (isHoneypotTriggered(formData)) {
+    redirect("/reports/submit?saved=invalid");
+  }
+
   const payload = await getPayload({
     config: configPromise,
     key: "thenestchurch-app",

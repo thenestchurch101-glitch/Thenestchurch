@@ -1,3 +1,4 @@
+import { HoneypotField } from "@/components/honeypot-field";
 import { PasswordField } from "@/app/admin/login/password-field";
 import { loginDepartmentHead } from "./actions";
 
@@ -86,6 +87,7 @@ export default async function DepartmentHeadLoginPage({
         ) : null}
 
         <form action={loginDepartmentHead} style={{ display: "grid", gap: "14px" }}>
+          <HoneypotField />
           <label style={{ display: "grid", gap: "8px" }}>
             <span style={{ fontSize: "0.82rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
               Email

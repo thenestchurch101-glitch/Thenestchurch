@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HoneypotField } from "@/components/honeypot-field";
 import type { AttendanceRecord, Department, Member } from "@/payload-types";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
 import { markMemberAsRegular } from "../actions";
@@ -284,6 +285,7 @@ export default async function NewcomersPage({
                           View Details
                         </Link>
                         <form action={markMemberAsRegular} className={styles.inlineForm}>
+                          <HoneypotField />
                           <input name="memberId" type="hidden" value={item.member.id} />
                           <input name="returnTo" type="hidden" value="/admin/members/newcomers" />
                           <button className={styles.inlineButton} type="submit">

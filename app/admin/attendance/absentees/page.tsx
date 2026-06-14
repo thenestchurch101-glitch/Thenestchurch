@@ -320,6 +320,16 @@ export default async function AttendanceAbsenteesPage({
             Surface members who have not been in church for weeks, including people who joined earlier but still have
             no recorded attendance.
           </p>
+          {canManageAttendance ? (
+            <div className={styles.actions}>
+              <Link className={styles.secondaryButton} href="/admin/attendance">
+                Back To Register
+              </Link>
+              <Link className={styles.secondaryButton} href="/admin/attendance/phone-export">
+                Export Phones
+              </Link>
+            </div>
+          ) : null}
         </section>
 
         <div className={styles.grid}>
@@ -494,52 +504,73 @@ export default async function AttendanceAbsenteesPage({
                     }}
                     totalItems={totalRows}
                   />
-                  <div className={styles.tableWrap}>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>Member</th>
-                          <th>Department</th>
-                          <th>Status</th>
-                          <th>Weeks Away</th>
-                          <th>Last Present</th>
-                          <th>Date Joined</th>
-                          <th>Contact</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pagedRows.map((row) => {
-                        const pillClass =
-                          row.reason === "never-attended"
-                            ? `${styles.pill} ${styles.pillNew}`
-                            : row.weeksAbsent >= weeks + 4
-                              ? `${styles.pill} ${styles.pillHigh}`
-                              : `${styles.pill} ${styles.pillMedium}`;
-
-                        const statusLabel =
-                          row.reason === "never-attended" ? "No attendance yet" : `Away for ${row.weeksAbsent} weeks`;
-
-                        return (
-                          <tr key={row.member.id}>
-                            <td>
-                              <span className={styles.memberName}>{row.member.fullName}</span>
-                              <span className={styles.memberMeta}>
-                                {row.member.isNewComer ? "Newcomer" : "Existing member"}
-                              </span>
-                            </td>
-                            <td>{row.departmentName}</td>
-                            <td>
-                              <span className={pillClass}>{statusLabel}</span>
-                            </td>
-                            <td>{row.weeksAbsent}</td>
-                            <td>{formatDateValue(row.lastPresentDate)}</td>
-                            <td>{formatDateValue(row.joinedDate)}</td>
-                            <td>{row.member.phoneNumber || row.member.whatsappNumber || row.member.email || "No contact details"}</td>
+                  <div className={styles.tableShell}>
+                    <div className={styles.tableLead}>
+                      <div>
+                        <span className={styles.tableLeadLabel}>Visible rows</span>
+                        <strong className={styles.tableLeadValue}>{pagedRows.length}</strong>
+                      </div>
+                      <div>
+                        <span className={styles.tableLeadLabel}>Current page</span>
+                        <strong className={styles.tableLeadValue}>
+                          {safePage} of {totalPages}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className={styles.tableWrap}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Member</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Weeks Away</th>
+                            <th>Last Present</th>
+                            <th>Date Joined</th>
+                            <th>Contact</th>
                           </tr>
-                        );
-                        })}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {pagedRows.map((row) => {
+                            const pillClass =
+                              row.reason === "never-attended"
+                                ? `${styles.pill} ${styles.pillNew}`
+                                : row.weeksAbsent >= weeks + 4
+                                  ? `${styles.pill} ${styles.pillHigh}`
+                                  : `${styles.pill} ${styles.pillMedium}`;
+
+                            const statusLabel =
+                              row.reason === "never-attended" ? "No attendance yet" : `Away for ${row.weeksAbsent} weeks`;
+
+                            return (
+                              <tr key={row.member.id}>
+                                <td>
+                                  <span className={styles.memberName}>{row.member.fullName}</span>
+                                  <span className={styles.memberMeta}>
+                                    {row.member.isNewComer ? "Newcomer" : "Existing member"}
+                                  </span>
+                                </td>
+                                <td>{row.departmentName}</td>
+                                <td>
+                                  <span className={pillClass}>{statusLabel}</span>
+                                </td>
+                                <td>{row.weeksAbsent}</td>
+                                <td>{formatDateValue(row.lastPresentDate)}</td>
+                                <td>{formatDateValue(row.joinedDate)}</td>
+                                <td className={styles.contactCell}>
+                                  <span className={styles.contactPrimary}>
+                                    {row.member.phoneNumber || row.member.whatsappNumber || row.member.email || "No contact details"}
+                                  </span>
+                                  {row.member.phoneNumber && row.member.whatsappNumber && row.member.phoneNumber !== row.member.whatsappNumber ? (
+                                    <span className={styles.contactSecondary}>{row.member.whatsappNumber}</span>
+                                  ) : null}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </>
               )}

@@ -2,11 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
+import { isHoneypotTriggered } from "@/payload/utilities/honeypot";
 
 const takeString = (value: FormDataEntryValue | null) =>
   typeof value === "string" ? value : "";
 
 export async function submitServiceReport(formData: FormData) {
+  if (isHoneypotTriggered(formData)) {
+    redirect("/admin/reports/submit?saved=invalid");
+  }
+
   const serviceID = Number(takeString(formData.get("service")));
   const departmentID = Number(takeString(formData.get("department")));
   const title = takeString(formData.get("title")).trim();
@@ -46,6 +51,10 @@ export async function submitServiceReport(formData: FormData) {
 }
 
 export async function createService(formData: FormData) {
+  if (isHoneypotTriggered(formData)) {
+    redirect("/admin/reports/services/new?saved=invalid");
+  }
+
   const takeString = (key: string) => {
     const value = formData.get(key);
     return typeof value === "string" ? value.trim() : "";

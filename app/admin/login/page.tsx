@@ -1,4 +1,5 @@
 import { loginAdmin } from "./actions";
+import { HoneypotField } from "@/components/honeypot-field";
 import { PasswordField } from "./password-field";
 
 type SearchParams = Promise<{
@@ -71,6 +72,7 @@ export default async function AdminLoginPage({
         ) : null}
 
         <form action={loginAdmin} style={{ display: "grid", gap: "14px" }}>
+          <HoneypotField />
           <label style={{ display: "grid", gap: "8px" }}>
             <span style={{ fontSize: "0.82rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
               Email

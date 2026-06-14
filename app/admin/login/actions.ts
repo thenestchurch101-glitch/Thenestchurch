@@ -5,8 +5,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { generatePayloadCookie, getPayload } from "payload";
 import { isDepartmentLeadOnly } from "@/payload/utilities/adminRoles";
+import { isHoneypotTriggered } from "@/payload/utilities/honeypot";
 
 export const loginAdmin = async (formData: FormData) => {
+  if (isHoneypotTriggered(formData)) {
+    redirect("/admin/login?error=invalid");
+  }
+
   const email = formData.get("email");
   const password = formData.get("password");
   let nextPath = "/admin";

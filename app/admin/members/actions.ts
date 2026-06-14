@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
+import { isHoneypotTriggered } from "@/payload/utilities/honeypot";
 
 const takeString = (value: FormDataEntryValue | null) => (typeof value === "string" ? value : "");
 
@@ -44,6 +45,10 @@ export async function markMemberAsRegular(formData: FormData) {
     ? returnToValue
     : "/admin/members/newcomers";
 
+  if (isHoneypotTriggered(formData)) {
+    redirect(`${returnTo}?updated=invalid`);
+  }
+
   if (!Number.isFinite(memberID)) {
     redirect(`${returnTo}?updated=invalid`);
   }
@@ -65,6 +70,10 @@ export async function markMemberAsRegular(formData: FormData) {
 }
 
 export async function updateMemberDetails(formData: FormData) {
+  if (isHoneypotTriggered(formData)) {
+    redirect("/admin/members?updated=invalid");
+  }
+
   const memberID = Number(takeString(formData.get("memberId")));
 
   if (!Number.isFinite(memberID)) {

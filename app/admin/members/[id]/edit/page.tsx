@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HoneypotField } from "@/components/honeypot-field";
 import type { Department, Member } from "@/payload-types";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
 import { updateMemberDetails } from "../../actions";
@@ -79,6 +80,7 @@ export default async function EditMemberPage({
             <div className={styles.panelPad}>
               <h2 className={styles.panelTitle}>{memberDoc.fullName}</h2>
               <form action={updateMemberDetails} className={styles.form} encType="multipart/form-data">
+                <HoneypotField />
                 <input name="memberId" type="hidden" value={memberDoc.id} />
 
                 <div className={styles.doubleGrid}>

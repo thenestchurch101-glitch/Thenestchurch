@@ -1,5 +1,3 @@
-import configPromise from "@payload-config";
-import { getPayload } from "payload";
 import styles from "@/app/public-operations.module.css";
 import { AttendanceSearch } from "./attendance-search";
 
@@ -20,54 +18,6 @@ export default async function PublicAttendancePage({
   const params = await searchParams;
   const saved = Array.isArray(params.saved) ? params.saved[0] : params.saved;
   const registered = Array.isArray(params.registered) ? params.registered[0] : params.registered;
-  const payload = await getPayload({
-    config: configPromise,
-    key: "thenestchurch-app",
-  });
-
-  const membersResult = await payload.find({
-    collection: "members",
-    depth: 1,
-    limit: 500,
-    pagination: false,
-    overrideAccess: true,
-    sort: "fullName",
-  });
-  const attendanceResult = await payload.find({
-    collection: "attendance-records",
-    depth: 1,
-    limit: 1000,
-    pagination: false,
-    overrideAccess: true,
-    where: {
-      date: {
-        equals: todayValue,
-      },
-    },
-  });
-
-  const attendanceByMember = new Map<number, (typeof attendanceResult.docs)[number]>();
-
-  for (const record of attendanceResult.docs) {
-    const member = record.member;
-    if (member && typeof member !== "number") {
-      attendanceByMember.set(member.id, record);
-    }
-  }
-
-  const members = membersResult.docs.map((member) => {
-    const departmentName =
-      member.department && typeof member.department !== "number" ? member.department.name : "No department";
-    const record = attendanceByMember.get(member.id);
-
-    return {
-      departmentName,
-      firstName: member.firstName ?? "M",
-      fullName: member.fullName ?? `${member.firstName} ${member.lastName}`.trim(),
-      id: member.id,
-      record,
-    };
-  });
 
   return (
     <main className={styles.page}>
@@ -101,7 +51,7 @@ export default async function PublicAttendancePage({
 
         <section className={styles.panel}>
           <div className={styles.panelPad}>
-            <AttendanceSearch date={todayValue} members={members} />
+            <AttendanceSearch date={todayValue} />
           </div>
         </section>
       </div>

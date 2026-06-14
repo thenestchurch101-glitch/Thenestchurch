@@ -1,5 +1,6 @@
 import configPromise from "@payload-config";
 import { getPayload } from "payload";
+import { HoneypotField } from "@/components/honeypot-field";
 import type { ReportInstruction, ReportTemplate } from "@/payload-types";
 import { submitPublicServiceReport } from "./actions";
 import styles from "@/app/public-operations.module.css";
@@ -133,6 +134,7 @@ export default async function PublicSubmitReportPage({
               </div>
             ) : null}
             <form action={submitPublicServiceReport} className={styles.form}>
+              <HoneypotField />
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="title">
                   Report Title

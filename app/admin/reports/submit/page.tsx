@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HoneypotField } from "@/components/honeypot-field";
 import type { Admin, Department, ReportInstruction, ReportTemplate, Service } from "@/payload-types";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
 import { submitServiceReport } from "../actions";
@@ -182,6 +183,7 @@ export default async function SubmitReportPage({
             <div className={styles.panelPad}>
               <h2 className={styles.panelTitle}>Department Submission</h2>
               <form action={submitServiceReport} className={styles.form}>
+                <HoneypotField />
                 <div className={styles.fieldGroup}>
                   <label className={styles.fieldLabel} htmlFor="title">
                     Report Title
