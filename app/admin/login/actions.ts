@@ -38,35 +38,35 @@ export const loginAdmin = async (formData: FormData) => {
       redirect("/admin/login?error=invalid");
     }
 
-    if (isDepartmentLeadOnly(result.user)) {
-      nextPath = "/department-head/login?error=wrongPortal";
-    } else {
-      const cookieExpiration = authConfig.tokenExpiration ? new Date(Date.now() + authConfig.tokenExpiration) : undefined;
-      const payloadCookie = generatePayloadCookie({
-        collectionAuthConfig: authConfig,
-        cookiePrefix: payload.config.cookiePrefix,
-        expires: cookieExpiration,
-        returnCookieAsObject: true,
-        token: result.token,
+    const cookieExpiration = authConfig.tokenExpiration ? new Date(Date.now() + authConfig.tokenExpiration) : undefined;
+    const payloadCookie = generatePayloadCookie({
+      collectionAuthConfig: authConfig,
+      cookiePrefix: payload.config.cookiePrefix,
+      expires: cookieExpiration,
+      returnCookieAsObject: true,
+      token: result.token,
+    });
+
+    if (payloadCookie.value) {
+      const cookieStore = await cookies();
+      const sameSite =
+        authConfig.cookies.sameSite === "None"
+          ? "none"
+          : authConfig.cookies.sameSite === "Strict"
+            ? "strict"
+            : "lax";
+
+      cookieStore.set(payloadCookie.name, payloadCookie.value, {
+        domain: authConfig.cookies.domain,
+        expires: payloadCookie.expires ? new Date(payloadCookie.expires) : undefined,
+        httpOnly: true,
+        sameSite,
+        secure: authConfig.cookies.secure || false,
       });
+    }
 
-      if (payloadCookie.value) {
-        const cookieStore = await cookies();
-        const sameSite =
-          authConfig.cookies.sameSite === "None"
-            ? "none"
-            : authConfig.cookies.sameSite === "Strict"
-              ? "strict"
-              : "lax";
-
-        cookieStore.set(payloadCookie.name, payloadCookie.value, {
-          domain: authConfig.cookies.domain,
-          expires: payloadCookie.expires ? new Date(payloadCookie.expires) : undefined,
-          httpOnly: true,
-          sameSite,
-          secure: authConfig.cookies.secure || false,
-        });
-      }
+    if (isDepartmentLeadOnly(result.user)) {
+      nextPath = "/department-head/reports/submit";
     }
   } catch {
     redirect("/admin/login?error=invalid");
