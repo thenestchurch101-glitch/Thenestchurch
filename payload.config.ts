@@ -44,10 +44,12 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || "dev-only-payload-secret-change-me",
   db: postgresAdapter({
     allowIDOnCreate: true,
+    push: process.env.PAYLOAD_ENABLE_SCHEMA_PUSH === "true",
     pool: {
       connectionString:
         process.env.DATABASE_URL ||
         "postgresql://postgres:replace-with-password@db.your-project-ref.supabase.co:5432/postgres",
+      connectionTimeoutMillis: 10000,
       idleTimeoutMillis: 30000,
       max: 2,
     },
