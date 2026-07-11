@@ -7,6 +7,8 @@ export type BirthdayRunResult = {
   skipped: number;
   status: "already-completed" | "already-running" | "completed" | "disabled" | "partial-failure";
   totalBirthdays?: number;
+  weeklyBirthdays?: number;
+  weeklySummaryRecipients?: number;
 };
 
 export type BirthdayRunOptions = {

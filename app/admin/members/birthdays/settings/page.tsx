@@ -48,7 +48,7 @@ export default async function BirthdayEmailSettingsPage({
           <p className={styles.eyebrow}>Birthdays</p>
           <h1 className={styles.title}>Birthday Email Settings</h1>
           <p className={styles.lede}>
-            Control member birthday messages and the Gmail addresses that receive the daily birthday summary.
+            Control member birthday messages and the Gmail addresses that receive the Sunday weekly summary.
           </p>
           <div className={styles.actions}>
             <Link className={styles.secondaryButton} href="/admin/members/birthdays">
@@ -88,7 +88,7 @@ export default async function BirthdayEmailSettingsPage({
 
           <section className={styles.panel}>
             <div className={styles.panelPad}>
-              <h2 className={styles.panelTitle}>Gmail Birthday Alerts</h2>
+              <h2 className={styles.panelTitle}>Sunday Gmail Birthday Digest</h2>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="adminNotificationEmails">Notification email addresses</label>
                 <textarea
@@ -98,11 +98,11 @@ export default async function BirthdayEmailSettingsPage({
                   name="adminNotificationEmails"
                   placeholder={"firstperson@gmail.com\nsecondperson@gmail.com"}
                 />
-                <p className={styles.panelText}>Enter one address per line or separate addresses with commas.</p>
+                <p className={styles.panelText}>Enter one address per line or separate addresses with commas. These addresses receive the Sunday-to-Saturday birthday list every Sunday.</p>
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="adminSummarySubject">Summary subject</label>
-                <input className={styles.input} defaultValue={settings.adminSummarySubject ?? "Birthday notification summary for {{date}}"} id="adminSummarySubject" name="adminSummarySubject" />
+                <input className={styles.input} defaultValue={settings.adminSummarySubject ?? "Birthday list for the week of {{date}}"} id="adminSummarySubject" name="adminSummarySubject" />
               </div>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor="adminSummaryBody">Summary message</label>

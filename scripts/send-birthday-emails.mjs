@@ -19,7 +19,7 @@ const result = await runBirthdayEmails({
 });
 
 console.log(
-  `Birthday run ${result.date}: status=${result.status}, sent=${result.sent}, skipped=${result.skipped}, failed=${result.failed}, dryRun=${result.dryRun}${result.reason ? `, reason=${result.reason}` : ""}`,
+  `Birthday run ${result.date}: status=${result.status}, sent=${result.sent}, skipped=${result.skipped}, failed=${result.failed}, weeklyBirthdays=${result.weeklyBirthdays ?? 0}, weeklySummaryRecipients=${result.weeklySummaryRecipients ?? 0}, dryRun=${result.dryRun}${result.reason ? `, reason=${result.reason}` : ""}`,
 );
 
 if (result.failed > 0) {

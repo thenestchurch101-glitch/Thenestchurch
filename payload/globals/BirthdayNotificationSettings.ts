@@ -52,13 +52,13 @@ export const BirthdayNotificationSettings: GlobalConfig = {
     {
       name: "adminSummarySubject",
       type: "text",
-      defaultValue: "Birthday notification summary for {{date}}",
+      defaultValue: "Birthday list for the week of {{date}}",
     },
     {
       name: "adminSummaryBody",
       type: "textarea",
       defaultValue:
-        "Birthday notifications were processed for {{date}}.\n\nSent: {{sentCount}}\nSkipped: {{skippedCount}}\nFailed: {{failedCount}}\n\nMembers:\n{{memberList}}",
+        "Here are the members celebrating birthdays from Sunday through Saturday, beginning {{date}}.\n\n{{memberList}}",
     },
   ],
 };

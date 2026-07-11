@@ -3,9 +3,12 @@ import { Pool } from "pg";
 const defaultMemberSubject = "Happy birthday from The Nest Church";
 const defaultMemberBody =
   "Dear {{firstName}},\n\nHappy birthday from The Nest Church. We celebrate God's goodness in your life today and pray that this new year is filled with grace, joy, and strength.\n\nWith love,\nThe Nest Church";
-const defaultAdminSummarySubject = "Birthday notification summary for {{date}}";
-const defaultAdminSummaryBody =
+const legacyAdminSummarySubject = "Birthday notification summary for {{date}}";
+const legacyAdminSummaryBody =
   "Birthday notifications were processed for {{date}}.\n\nSent: {{sentCount}}\nSkipped: {{skippedCount}}\nFailed: {{failedCount}}\n\nMembers:\n{{memberList}}";
+const defaultAdminSummarySubject = "Birthday list for the week of {{date}}";
+const defaultAdminSummaryBody =
+  "Here are the members celebrating birthdays from Sunday through Saturday, beginning {{date}}.\n\n{{memberList}}";
 const advisoryLockName = "thenestchurch-birthday-email-run";
 
 const formatLagosDate = (date) => {
@@ -13,6 +16,7 @@ const formatLagosDate = (date) => {
     day: "2-digit",
     month: "2-digit",
     timeZone: "Africa/Lagos",
+    weekday: "short",
     year: "numeric",
   }).formatToParts(date);
   const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
@@ -21,6 +25,7 @@ const formatLagosDate = (date) => {
     day: Number(lookup.day),
     iso: `${lookup.year}-${lookup.month}-${lookup.day}`,
     month: Number(lookup.month),
+    weekday: lookup.weekday,
   };
 };
 
@@ -172,6 +177,44 @@ const getBirthdayMembers = async (client, runDate) => {
   return result.rows;
 };
 
+const getWeeklyBirthdayMembers = async (client, runDate) => {
+  const result = await client.query(
+    `select id,
+            first_name,
+            last_name,
+            full_name,
+            email,
+            phone_number,
+            whatsapp_number,
+            date_of_birth
+       from members
+      where date_of_birth is not null
+      order by full_name`,
+  );
+  const weekDates = Array.from({ length: 7 }, (_, offset) => {
+    const date = new Date(`${runDate.iso}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + offset);
+    return {
+      day: date.getUTCDate(),
+      iso: date.toISOString().slice(0, 10),
+      month: date.getUTCMonth() + 1,
+    };
+  });
+  const dateByMonthDay = new Map(weekDates.map((date) => [`${date.month}-${date.day}`, date.iso]));
+
+  return result.rows
+    .map((member) => {
+      const birthDate = new Date(member.date_of_birth);
+      const birthdayThisWeek = dateByMonthDay.get(`${birthDate.getUTCMonth() + 1}-${birthDate.getUTCDate()}`);
+      return birthdayThisWeek ? { ...member, birthday_this_week: birthdayThisWeek } : null;
+    })
+    .filter(Boolean)
+    .sort((left, right) =>
+      left.birthday_this_week.localeCompare(right.birthday_this_week) ||
+      String(left.full_name || "").localeCompare(String(right.full_name || "")),
+    );
+};
+
 const getAlreadySentMemberIDs = async (client, runDate) => {
   const result = await client.query(
     `select distinct member_id
@@ -296,13 +339,20 @@ export const runBirthdayEmails = async ({
       }
     }
 
-    const adminEmails = parseEmails(settings.admin_notification_emails);
+    const isWeeklySummaryDay = runDate.weekday === "Sun";
+    const adminEmails = isWeeklySummaryDay ? parseEmails(settings.admin_notification_emails) : [];
+    const weeklyBirthdayMembers = isWeeklySummaryDay
+      ? await getWeeklyBirthdayMembers(client, runDate)
+      : [];
+    if (isWeeklySummaryDay) {
+      log(`Found ${weeklyBirthdayMembers.length} birthday member(s) for the Sunday-to-Saturday digest.`);
+    }
     const getMemberPhone = (member) => member.phone_number || member.whatsapp_number || "No phone number";
     const memberList =
-      birthdayMembers
-        .map((member) => `- ${member.full_name || `Member ${member.id}`} | Phone: ${getMemberPhone(member)} | Email: ${member.email || "No email"}`)
+      weeklyBirthdayMembers
+        .map((member) => `- ${member.birthday_this_week}: ${member.full_name || `Member ${member.id}`} | Phone: ${getMemberPhone(member)} | Email: ${member.email || "No email"}`)
         .join("\n") ||
-      "- No birthdays today";
+      "- No birthdays this week";
     const summaryValues = {
       date: runDate.iso,
       failedCount: summary.failed.length,
@@ -310,22 +360,29 @@ export const runBirthdayEmails = async ({
       sentCount: summary.sent.length,
       skippedCount: summary.skipped.length,
     };
-    const summaryBody = renderTemplate(settings.admin_summary_body || defaultAdminSummaryBody, summaryValues);
-    const memberCards = birthdayMembers.length
-      ? birthdayMembers
+    const summaryBodyTemplate = !settings.admin_summary_body || settings.admin_summary_body === legacyAdminSummaryBody
+      ? defaultAdminSummaryBody
+      : settings.admin_summary_body;
+    const summarySubjectTemplate = !settings.admin_summary_subject || settings.admin_summary_subject === legacyAdminSummarySubject
+      ? defaultAdminSummarySubject
+      : settings.admin_summary_subject;
+    const summaryBody = renderTemplate(summaryBodyTemplate, summaryValues);
+    const memberCards = weeklyBirthdayMembers.length
+      ? weeklyBirthdayMembers
           .map(
             (member) => `
               <div style="margin:0 0 14px;padding:18px;border:1px solid #eaded2;border-left:4px solid #a91427;border-radius:12px;background:#fffdf9;">
                 <div style="font-size:18px;font-weight:700;color:#73101d;">${toPlainTextHtml(member.full_name || `Member ${member.id}`)}</div>
+                <div style="margin-top:7px;color:#4e453f;"><strong>Birthday:</strong> ${toPlainTextHtml(member.birthday_this_week)}</div>
                 <div style="margin-top:7px;color:#4e453f;"><strong>Phone:</strong> ${toPlainTextHtml(getMemberPhone(member))}</div>
                 <div style="margin-top:3px;color:#4e453f;"><strong>Email:</strong> ${toPlainTextHtml(member.email || "No email")}</div>
               </div>`,
           )
           .join("")
-      : '<div style="padding:18px;border-radius:12px;background:#fbf8f2;color:#766c64;">No birthdays today.</div>';
+      : '<div style="padding:18px;border-radius:12px;background:#fbf8f2;color:#766c64;">No birthdays this week.</div>';
     const summaryHtml = renderBrandedEmail({
       content: `
-        <p style="margin:0 0 20px;">Here ${birthdayMembers.length === 1 ? "is the member" : "are the members"} celebrating today:</p>
+        <p style="margin:0 0 20px;">Here ${weeklyBirthdayMembers.length === 1 ? "is the member" : "are the members"} celebrating from Sunday through Saturday:</p>
         ${memberCards}
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:22px;background:#f8f3eb;border-radius:12px;">
           <tr>
@@ -336,7 +393,7 @@ export const runBirthdayEmails = async ({
         </table>`,
       eyebrow: "Birthday Reminder",
       logoUrl,
-      title: birthdayMembers.length === 1 ? "A Member Is Celebrating Today" : "Today's Birthday Celebrations",
+      title: weeklyBirthdayMembers.length === 1 ? "This Week's Birthday" : "This Week's Birthday Celebrations",
     });
 
     for (const email of summary.failed.length === 0 ? adminEmails : []) {
@@ -346,8 +403,8 @@ export const runBirthdayEmails = async ({
           dryRun,
           from: emailFrom,
           html: summaryHtml,
-          idempotencyKey: `birthday-summary-${runDate.iso}-${email}`,
-          subject: renderTemplate(settings.admin_summary_subject || defaultAdminSummarySubject, summaryValues),
+          idempotencyKey: `birthday-weekly-summary-${runDate.iso}-${email}`,
+          subject: renderTemplate(summarySubjectTemplate, summaryValues),
           text: summaryBody,
           to: email,
         });
@@ -368,6 +425,8 @@ export const runBirthdayEmails = async ({
       skipped: summary.skipped.length,
       status: summary.failed.length > 0 ? "partial-failure" : "completed",
       totalBirthdays: birthdayMembers.length,
+      weeklyBirthdays: weeklyBirthdayMembers.length,
+      weeklySummaryRecipients: adminEmails.length,
     };
   } finally {
     if (lockAcquired) {
