@@ -17,6 +17,7 @@ export type BirthdayRunOptions = {
   force?: boolean;
   log?: (message: string) => void;
   resendApiKey?: string;
+  siteUrl?: string;
 };
 
 export function runBirthdayEmails(options?: BirthdayRunOptions): Promise<BirthdayRunResult>;

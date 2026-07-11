@@ -60,7 +60,40 @@ const toPlainTextHtml = (text) =>
     .replaceAll("'", "&#039;")
     .replace(/\r?\n/g, "<br />");
 
-const sendEmail = async ({ apiKey, dryRun, from, idempotencyKey, subject, text, to }) => {
+const renderBrandedEmail = ({ content, eyebrow, logoUrl, title }) => `<!doctype html>
+<html>
+  <body style="margin:0;background:#f6f1e8;color:#211b17;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f1e8;padding:28px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 10px 35px rgba(38,25,20,.08);">
+            <tr>
+              <td style="background:#171313;padding:24px 30px;text-align:center;">
+                <img src="${logoUrl}" width="150" alt="The Nest Church" style="display:inline-block;max-width:150px;height:auto;border:0;" />
+              </td>
+            </tr>
+            <tr>
+              <td style="background:linear-gradient(135deg,#9f1223,#4b1719);padding:30px;color:#fffaf2;">
+                <div style="color:#f3c44d;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${toPlainTextHtml(eyebrow)}</div>
+                <h1 style="margin:10px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;color:#ffffff;">${toPlainTextHtml(title)}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;font-size:16px;line-height:1.7;color:#3d342e;">${content}</td>
+            </tr>
+            <tr>
+              <td style="padding:20px 30px;background:#fbf8f2;border-top:1px solid #eee4d7;text-align:center;color:#766c64;font-size:12px;line-height:1.5;">
+                Sent with love by The Nest Church<br />This is an automated birthday notification.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+const sendEmail = async ({ apiKey, dryRun, from, html, idempotencyKey, subject, text, to }) => {
   if (dryRun) {
     return;
   }
@@ -72,7 +105,7 @@ const sendEmail = async ({ apiKey, dryRun, from, idempotencyKey, subject, text, 
   const response = await fetch("https://api.resend.com/emails", {
     body: JSON.stringify({
       from,
-      html: toPlainTextHtml(text),
+      html: html || toPlainTextHtml(text),
       subject,
       text,
       to: Array.isArray(to) ? to : [to],
@@ -125,6 +158,8 @@ const getBirthdayMembers = async (client, runDate) => {
             last_name,
             full_name,
             email,
+            phone_number,
+            whatsapp_number,
             date_of_birth
        from members
       where date_of_birth is not null
@@ -168,12 +203,14 @@ export const runBirthdayEmails = async ({
   force = false,
   log = () => {},
   resendApiKey = process.env.RESEND_API_KEY,
+  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.thenestexpression.com",
 } = {}) => {
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is missing.");
   }
 
   const runDate = getRunDate(date);
+  const logoUrl = `${siteUrl.replace(/\/$/, "")}/images/logo1.png`;
   const pool = new Pool({
     connectionString: databaseUrl,
     connectionTimeoutMillis: 30000,
@@ -240,6 +277,12 @@ export const runBirthdayEmails = async ({
           apiKey: resendApiKey,
           dryRun,
           from: emailFrom,
+          html: renderBrandedEmail({
+            content: toPlainTextHtml(body),
+            eyebrow: "Celebrating You",
+            logoUrl,
+            title: `Happy Birthday, ${member.first_name || member.full_name || "Dear Member"}!`,
+          }),
           idempotencyKey: `birthday-member-${runDate.iso}-${member.id}`,
           subject: renderTemplate(settings.member_email_subject || defaultMemberSubject, templateValues),
           text: body,
@@ -254,8 +297,11 @@ export const runBirthdayEmails = async ({
     }
 
     const adminEmails = parseEmails(settings.admin_notification_emails);
+    const getMemberPhone = (member) => member.phone_number || member.whatsapp_number || "No phone number";
     const memberList =
-      birthdayMembers.map((member) => `- ${member.full_name || member.email || `Member ${member.id}`}`).join("\n") ||
+      birthdayMembers
+        .map((member) => `- ${member.full_name || `Member ${member.id}`} | Phone: ${getMemberPhone(member)} | Email: ${member.email || "No email"}`)
+        .join("\n") ||
       "- No birthdays today";
     const summaryValues = {
       date: runDate.iso,
@@ -265,6 +311,33 @@ export const runBirthdayEmails = async ({
       skippedCount: summary.skipped.length,
     };
     const summaryBody = renderTemplate(settings.admin_summary_body || defaultAdminSummaryBody, summaryValues);
+    const memberCards = birthdayMembers.length
+      ? birthdayMembers
+          .map(
+            (member) => `
+              <div style="margin:0 0 14px;padding:18px;border:1px solid #eaded2;border-left:4px solid #a91427;border-radius:12px;background:#fffdf9;">
+                <div style="font-size:18px;font-weight:700;color:#73101d;">${toPlainTextHtml(member.full_name || `Member ${member.id}`)}</div>
+                <div style="margin-top:7px;color:#4e453f;"><strong>Phone:</strong> ${toPlainTextHtml(getMemberPhone(member))}</div>
+                <div style="margin-top:3px;color:#4e453f;"><strong>Email:</strong> ${toPlainTextHtml(member.email || "No email")}</div>
+              </div>`,
+          )
+          .join("")
+      : '<div style="padding:18px;border-radius:12px;background:#fbf8f2;color:#766c64;">No birthdays today.</div>';
+    const summaryHtml = renderBrandedEmail({
+      content: `
+        <p style="margin:0 0 20px;">Here ${birthdayMembers.length === 1 ? "is the member" : "are the members"} celebrating today:</p>
+        ${memberCards}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:22px;background:#f8f3eb;border-radius:12px;">
+          <tr>
+            <td style="padding:15px;text-align:center;"><strong style="display:block;font-size:22px;color:#1e7f4d;">${summary.sent.length}</strong><span style="font-size:12px;color:#766c64;">Sent</span></td>
+            <td style="padding:15px;text-align:center;"><strong style="display:block;font-size:22px;color:#9a6a00;">${summary.skipped.length}</strong><span style="font-size:12px;color:#766c64;">Skipped</span></td>
+            <td style="padding:15px;text-align:center;"><strong style="display:block;font-size:22px;color:#a91427;">${summary.failed.length}</strong><span style="font-size:12px;color:#766c64;">Failed</span></td>
+          </tr>
+        </table>`,
+      eyebrow: "Birthday Reminder",
+      logoUrl,
+      title: birthdayMembers.length === 1 ? "A Member Is Celebrating Today" : "Today's Birthday Celebrations",
+    });
 
     for (const email of summary.failed.length === 0 ? adminEmails : []) {
       try {
@@ -272,6 +345,7 @@ export const runBirthdayEmails = async ({
           apiKey: resendApiKey,
           dryRun,
           from: emailFrom,
+          html: summaryHtml,
           idempotencyKey: `birthday-summary-${runDate.iso}-${email}`,
           subject: renderTemplate(settings.admin_summary_subject || defaultAdminSummarySubject, summaryValues),
           text: summaryBody,
