@@ -16,6 +16,7 @@ const result = await runBirthdayEmails({
   dryRun: args.has("--dry-run"),
   force: args.has("--force"),
   log: verbose ? (message) => console.log(`[birthday] ${message}`) : undefined,
+  weeklySummaryOnly: args.has("--weekly-summary-only"),
 });
 
 console.log(

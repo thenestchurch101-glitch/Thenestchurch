@@ -8,6 +8,7 @@ export type BirthdayRunResult = {
   status: "already-completed" | "already-running" | "completed" | "disabled" | "partial-failure";
   totalBirthdays?: number;
   weeklyBirthdays?: number;
+  weeklyStartDate?: string;
   weeklySummaryRecipients?: number;
 };
 
@@ -20,6 +21,7 @@ export type BirthdayRunOptions = {
   log?: (message: string) => void;
   resendApiKey?: string;
   siteUrl?: string;
+  weeklySummaryOnly?: boolean;
 };
 
 export function runBirthdayEmails(options?: BirthdayRunOptions): Promise<BirthdayRunResult>;

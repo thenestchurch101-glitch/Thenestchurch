@@ -32,7 +32,9 @@ const handleBirthdayRun = async (request: NextRequest) => {
   }
 
   try {
-    const result = await runBirthdayEmails();
+    const result = await runBirthdayEmails({
+      weeklySummaryOnly: request.nextUrl.searchParams.get("preview") === "weekly",
+    });
     const status = result.failed > 0 ? 502 : 200;
     return NextResponse.json(result, { status });
   } catch (error) {

@@ -47,6 +47,13 @@ const getRunDate = (dateOverride) => {
   return formatLagosDate(date);
 };
 
+const getNextSunday = (runDate) => {
+  const date = new Date(`${runDate.iso}T12:00:00Z`);
+  const daysUntilSunday = (7 - date.getUTCDay()) % 7;
+  date.setUTCDate(date.getUTCDate() + daysUntilSunday);
+  return formatLagosDate(date);
+};
+
 const parseEmails = (value) =>
   String(value ?? "")
     .split(/[\n,]/)
@@ -247,6 +254,7 @@ export const runBirthdayEmails = async ({
   log = () => {},
   resendApiKey = process.env.RESEND_API_KEY,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.thenestexpression.com",
+  weeklySummaryOnly = false,
 } = {}) => {
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is missing.");
@@ -282,12 +290,12 @@ export const runBirthdayEmails = async ({
       ? formatLagosDate(new Date(settings.last_run)).iso === runDate.iso
       : false;
 
-    if (alreadyRan && !force && !dryRun) {
+    if (alreadyRan && !force && !dryRun && !weeklySummaryOnly) {
       return { date: runDate.iso, dryRun, failed: 0, reason: "Birthday notifications have already run today.", sent: 0, skipped: 0, status: "already-completed" };
     }
 
-    log("Loading members with birthdays.");
-    const birthdayMembers = await getBirthdayMembers(client, runDate);
+    log(weeklySummaryOnly ? "Preparing a weekly birthday digest preview." : "Loading members with birthdays.");
+    const birthdayMembers = weeklySummaryOnly ? [] : await getBirthdayMembers(client, runDate);
     const alreadySentMemberIDs = dryRun ? new Set() : await getAlreadySentMemberIDs(client, runDate);
     log(`Found ${birthdayMembers.length} birthday member(s) for ${runDate.iso}.`);
 
@@ -339,10 +347,11 @@ export const runBirthdayEmails = async ({
       }
     }
 
-    const isWeeklySummaryDay = runDate.weekday === "Sun";
+    const isWeeklySummaryDay = weeklySummaryOnly || runDate.weekday === "Sun";
+    const weeklyStartDate = weeklySummaryOnly ? getNextSunday(runDate) : runDate;
     const adminEmails = isWeeklySummaryDay ? parseEmails(settings.admin_notification_emails) : [];
     const weeklyBirthdayMembers = isWeeklySummaryDay
-      ? await getWeeklyBirthdayMembers(client, runDate)
+      ? await getWeeklyBirthdayMembers(client, weeklyStartDate)
       : [];
     if (isWeeklySummaryDay) {
       log(`Found ${weeklyBirthdayMembers.length} birthday member(s) for the Sunday-to-Saturday digest.`);
@@ -354,7 +363,7 @@ export const runBirthdayEmails = async ({
         .join("\n") ||
       "- No birthdays this week";
     const summaryValues = {
-      date: runDate.iso,
+      date: weeklyStartDate.iso,
       failedCount: summary.failed.length,
       memberList,
       sentCount: summary.sent.length,
@@ -403,7 +412,7 @@ export const runBirthdayEmails = async ({
           dryRun,
           from: emailFrom,
           html: summaryHtml,
-          idempotencyKey: `birthday-weekly-summary-${runDate.iso}-${email}`,
+          idempotencyKey: `birthday-weekly-summary-${weeklyStartDate.iso}-${email}`,
           subject: renderTemplate(summarySubjectTemplate, summaryValues),
           text: summaryBody,
           to: email,
@@ -413,7 +422,7 @@ export const runBirthdayEmails = async ({
       }
     }
 
-    if (!dryRun && summary.failed.length === 0) {
+    if (!dryRun && !weeklySummaryOnly && summary.failed.length === 0) {
       await client.query("update birthday_notification_settings set last_run = now(), updated_at = now()");
     }
 
@@ -426,6 +435,7 @@ export const runBirthdayEmails = async ({
       status: summary.failed.length > 0 ? "partial-failure" : "completed",
       totalBirthdays: birthdayMembers.length,
       weeklyBirthdays: weeklyBirthdayMembers.length,
+      weeklyStartDate: isWeeklySummaryDay ? weeklyStartDate.iso : undefined,
       weeklySummaryRecipients: adminEmails.length,
     };
   } finally {
