@@ -208,6 +208,9 @@ export default async function MemberBirthdaysPage({
           <h1 className={styles.title}>Birthday Dashboard</h1>
           <p className={styles.lede}>Celebrate members with birthdays in {selectedMonthName}, grouped for daily follow-up.</p>
           <div className={styles.actions}>
+            <Link className={styles.primaryButton} href="/admin/members/birthdays/settings">
+              Email Settings
+            </Link>
             <Link className={styles.secondaryButton} href="/admin/members">
               Back To Members
             </Link>
