@@ -63,6 +63,14 @@ const parseEmails = (value) =>
 const renderTemplate = (template, values) =>
   String(template ?? "").replace(/\{\{(\w+)\}\}/g, (_, key) => String(values[key] ?? ""));
 
+const formatBirthdaySender = (value) => {
+  const sender = String(value || "").trim();
+  const angleAddress = sender.match(/<([^>]+)>/)?.[1]?.trim();
+  const address = angleAddress || sender;
+
+  return `Nest Church Birthday Alert <${address}>`;
+};
+
 const toPlainTextHtml = (text) =>
   String(text)
     .replaceAll("&", "&amp;")
@@ -262,6 +270,7 @@ export const runBirthdayEmails = async ({
 
   const runDate = getRunDate(date);
   const logoUrl = `${siteUrl.replace(/\/$/, "")}/images/logo1.png`;
+  const birthdayEmailFrom = formatBirthdaySender(emailFrom);
   const pool = new Pool({
     connectionString: databaseUrl,
     connectionTimeoutMillis: 30000,
@@ -327,7 +336,7 @@ export const runBirthdayEmails = async ({
         await sendEmail({
           apiKey: resendApiKey,
           dryRun,
-          from: emailFrom,
+          from: birthdayEmailFrom,
           html: renderBrandedEmail({
             content: toPlainTextHtml(body),
             eyebrow: "Celebrating You",
@@ -410,7 +419,7 @@ export const runBirthdayEmails = async ({
         await sendEmail({
           apiKey: resendApiKey,
           dryRun,
-          from: emailFrom,
+          from: birthdayEmailFrom,
           html: summaryHtml,
           idempotencyKey: `birthday-weekly-summary-${weeklyStartDate.iso}-${email}`,
           subject: renderTemplate(summarySubjectTemplate, summaryValues),
