@@ -2,10 +2,20 @@ import Link from "next/link";
 import type { BirthdayNotificationSetting } from "@/payload-types";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
 import styles from "../../members.module.css";
-import { saveBirthdayEmailSettings } from "./actions";
+import {
+  saveBirthdayEmailSettings,
+  sendDailyBirthdayEmailsNow,
+  sendWeeklyBirthdayDigestNow,
+} from "./actions";
 
 type SearchParams = Promise<{
   saved?: string | string[];
+  failed?: string | string[];
+  recipients?: string | string[];
+  run?: string | string[];
+  sent?: string | string[];
+  type?: string | string[];
+  weekly?: string | string[];
 }>;
 
 const takeString = (value: string | string[] | undefined) =>
@@ -33,6 +43,12 @@ export default async function BirthdayEmailSettingsPage({
 }) {
   const params = await searchParams;
   const saved = takeString(params.saved);
+  const runStatus = takeString(params.run);
+  const runType = takeString(params.type);
+  const failed = takeString(params.failed) ?? "0";
+  const recipients = takeString(params.recipients) ?? "0";
+  const sent = takeString(params.sent) ?? "0";
+  const weekly = takeString(params.weekly) ?? "0";
   const { req } = await getAdminContext("birthday-email-settings-page", {
     allowedRoles: ["admin", "staff"],
   });
@@ -63,6 +79,28 @@ export default async function BirthdayEmailSettingsPage({
         {saved === "invalid" ? (
           <div className={styles.emptyState}>Enter the send time in HH:mm format, for example 08:00.</div>
         ) : null}
+        {runStatus ? (
+          <div className={runStatus === "partial-failure" ? styles.emptyState : `${styles.banner} ${styles.bannerSuccess}`}>
+            {runType === "weekly"
+              ? `Weekly digest result: ${weekly} birthday member(s), ${recipients} recipient(s), ${failed} failure(s).`
+              : `Daily birthday result: ${sent} personal email(s) sent, ${failed} failure(s). Status: ${runStatus}.`}
+          </div>
+        ) : null}
+
+        <section className={styles.panel}>
+          <div className={styles.panelPad}>
+            <h2 className={styles.panelTitle}>Manual Sending</h2>
+            <p className={styles.panelText}>Use these controls for testing or when you need to run a message outside the normal cron schedule.</p>
+            <div className={styles.actions}>
+              <form action={sendDailyBirthdayEmailsNow}>
+                <button className={styles.primaryButton} type="submit">Send Today&apos;s Birthday Emails</button>
+              </form>
+              <form action={sendWeeklyBirthdayDigestNow}>
+                <button className={styles.secondaryButton} type="submit">Send Weekly Digest Now</button>
+              </form>
+            </div>
+          </div>
+        </section>
 
         <form action={saveBirthdayEmailSettings} className={styles.stack}>
           <section className={styles.panel}>

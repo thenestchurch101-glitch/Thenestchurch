@@ -35,7 +35,7 @@ const handleBirthdayRun = async (request: NextRequest) => {
     const result = await runBirthdayEmails({
       weeklySummaryOnly: request.nextUrl.searchParams.get("preview") === "weekly",
     });
-    const status = result.failed > 0 ? 502 : 200;
+    const status = result.status === "partial-failure" ? 502 : 200;
     return NextResponse.json(result, { status });
   } catch (error) {
     console.error("Birthday email cron failed.", error);

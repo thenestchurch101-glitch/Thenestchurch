@@ -1,7 +1,9 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { getAdminContext } from "@/payload/utilities/getAdminContext";
+import { runBirthdayEmails } from "@/scripts/birthday-email-runner.mjs";
 
 const takeString = (formData: FormData, key: string) => {
   const value = formData.get(key);
@@ -34,4 +36,36 @@ export async function saveBirthdayEmailSettings(formData: FormData) {
   });
 
   redirect("/admin/members/birthdays/settings?saved=1");
+}
+
+const resultRedirect = (type: "daily" | "weekly", result: Awaited<ReturnType<typeof runBirthdayEmails>>) => {
+  const params = new URLSearchParams({
+    failed: String(result.failed + (result.weeklySummaryFailed ?? 0)),
+    recipients: String(result.weeklySummaryRecipients ?? 0),
+    run: result.status,
+    sent: String(result.sent),
+    type,
+    weekly: String(result.weeklyBirthdays ?? 0),
+  });
+
+  redirect(`/admin/members/birthdays/settings?${params.toString()}`);
+};
+
+export async function sendDailyBirthdayEmailsNow() {
+  await getAdminContext("manual-daily-birthday-email-action", {
+    allowedRoles: ["admin", "staff"],
+  });
+  const result = await runBirthdayEmails();
+  resultRedirect("daily", result);
+}
+
+export async function sendWeeklyBirthdayDigestNow() {
+  await getAdminContext("manual-weekly-birthday-digest-action", {
+    allowedRoles: ["admin", "staff"],
+  });
+  const result = await runBirthdayEmails({
+    idempotencySuffix: randomUUID(),
+    weeklySummaryOnly: true,
+  });
+  resultRedirect("weekly", result);
 }

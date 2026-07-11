@@ -259,6 +259,7 @@ export const runBirthdayEmails = async ({
   dryRun = false,
   emailFrom = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "The Nest Church <no-reply@thenestchurch.org>",
   force = false,
+  idempotencySuffix,
   log = () => {},
   resendApiKey = process.env.RESEND_API_KEY,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.thenestexpression.com",
@@ -414,6 +415,8 @@ export const runBirthdayEmails = async ({
       title: weeklyBirthdayMembers.length === 1 ? "This Week's Birthday" : "This Week's Birthday Celebrations",
     });
 
+    let weeklySummaryFailed = 0;
+
     for (const email of summary.failed.length === 0 ? adminEmails : []) {
       try {
         await sendEmail({
@@ -421,12 +424,13 @@ export const runBirthdayEmails = async ({
           dryRun,
           from: birthdayEmailFrom,
           html: summaryHtml,
-          idempotencyKey: `birthday-weekly-summary-${weeklyStartDate.iso}-${email}`,
+          idempotencyKey: `birthday-weekly-summary-${weeklyStartDate.iso}-${email}${idempotencySuffix ? `-${idempotencySuffix}` : ""}`,
           subject: renderTemplate(summarySubjectTemplate, summaryValues),
           text: summaryBody,
           to: email,
         });
       } catch (error) {
+        weeklySummaryFailed += 1;
         log(`Admin birthday summary failed for ${email}: ${error instanceof Error ? error.message : error}`);
       }
     }
@@ -441,11 +445,12 @@ export const runBirthdayEmails = async ({
       failed: summary.failed.length,
       sent: summary.sent.length,
       skipped: summary.skipped.length,
-      status: summary.failed.length > 0 ? "partial-failure" : "completed",
+      status: summary.failed.length > 0 || weeklySummaryFailed > 0 ? "partial-failure" : "completed",
       totalBirthdays: birthdayMembers.length,
       weeklyBirthdays: weeklyBirthdayMembers.length,
       weeklyStartDate: isWeeklySummaryDay ? weeklyStartDate.iso : undefined,
       weeklySummaryRecipients: adminEmails.length,
+      weeklySummaryFailed,
     };
   } finally {
     if (lockAcquired) {

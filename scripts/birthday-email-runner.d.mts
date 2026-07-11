@@ -10,6 +10,7 @@ export type BirthdayRunResult = {
   weeklyBirthdays?: number;
   weeklyStartDate?: string;
   weeklySummaryRecipients?: number;
+  weeklySummaryFailed?: number;
 };
 
 export type BirthdayRunOptions = {
@@ -18,6 +19,7 @@ export type BirthdayRunOptions = {
   dryRun?: boolean;
   emailFrom?: string;
   force?: boolean;
+  idempotencySuffix?: string;
   log?: (message: string) => void;
   resendApiKey?: string;
   siteUrl?: string;
